@@ -1,0 +1,14 @@
+
+{
+  "distance": 6.25,
+  "status": "Normal water level",
+  "rain": "No rain",
+  "rainValue": 3500
+}
+
+{
+  "distance": 4.80,
+  "status": "Water overflow warning!",
+  "rain": "Rain detected",
+  "rainValue": 800
+}
