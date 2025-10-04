@@ -1,35 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login_page.dart';
-import 'home_page.dart';
 import 'firebase_options.dart';
+import 'login_page.dart';
+import 'main_navigation.dart';
+import 'water_history.dart';
+import 'rain_history.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  runApp(const PondSafeApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class PondSafeApp extends StatelessWidget {
+  const PondSafeApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: "PondSafe IoT",
       debugShowCheckedModeBanner: false,
-      title: 'PondSafe IoT',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      // 👇 auto check if logged in or not
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: const Color(0xFFF2F6FF),
+      ),
+
+      // optional: set up named routes for quick navigation
+      routes: {
+        '/water-history': (context) => const WaterHistoryPage(),
+        '/rain-history': (context) => const RainHistoryPage(),
+      },
+
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
           } else if (snapshot.hasData) {
-            return const HomePage();
+            return const MainNavigation();
           } else {
             return const LoginPage();
           }
