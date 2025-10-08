@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _fetchLatestData(); // fetch on startup
+    _fetchLatestData(); 
     _startHourlyTimer();
     _startShortTimer();
     _startFlashTimer();
@@ -40,14 +40,14 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  // Hourly timer for normal updates
+  // hourly timer
   void _startHourlyTimer() {
     hourlyTimer = Timer.periodic(const Duration(hours: 1), (timer) {
       _fetchLatestData(updateImmediately: false);
     });
   }
 
-  // Short timer for urgent checks every 5 seconds
+  // Short timer 
   void _startShortTimer() {
     shortTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _fetchLatestData(updateImmediately: true);
@@ -80,10 +80,7 @@ class _HomePageState extends State<HomePage> {
     final hour = int.tryParse(timeString.split(":")[0]) ?? 0;
     final status = (latest["water_status"] ?? "").toString().toUpperCase();
 
-    // Update UI if:
-    // 1. Immediate urgent check (WARNING/OVERFLOW)
-    // 2. Hourly update for normal data
-    // 3. First load
+   
     if (currentData == null ||
         (updateImmediately && (status == "WARNING" || status == "OVERFLOW")) ||
         (hour != lastDisplayedHour && status != "WARNING" && status != "OVERFLOW")) {

@@ -28,7 +28,7 @@ class PondSafeApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF2F6FF),
       ),
 
-      // optional: set up named routes for quick navigation
+      
       routes: {
         '/water-history': (context) => const WaterHistoryPage(),
         '/rain-history': (context) => const RainHistoryPage(),

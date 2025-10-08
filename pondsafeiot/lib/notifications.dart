@@ -9,15 +9,15 @@ class NotificationsPage extends StatelessWidget {
   Color getStatusColor(String status) {
     switch (status.toUpperCase()) {
       case "OVERFLOW":
-        return Colors.red.shade400; // lighter red
+        return Colors.red.shade400; 
       case "WARNING":
-        return Colors.yellow.shade400; // softer yellow
+        return Colors.yellow.shade400;
       default:
         return Colors.blue.shade200;
     }
   }
 
-  // Parse key like "01-10-2025_16:32:15" into DateTime
+ 
   DateTime? parseKeyToDateTime(String key) {
     try {
       final parts = key.split("_");
@@ -40,7 +40,7 @@ class NotificationsPage extends StatelessWidget {
     try {
       final parts = dateStr.split("-");
       final dt = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
-      return DateFormat.MMMd().format(dt); // Sep 25
+      return DateFormat.MMMd().format(dt); 
     } catch (_) {
       return dateStr;
     }
@@ -50,7 +50,7 @@ class NotificationsPage extends StatelessWidget {
     try {
       final parts = timeStr.split(":");
       final dt = DateTime(0, 1, 1, int.parse(parts[0]), int.parse(parts[1]));
-      return DateFormat.jm().format(dt); // 11:45 AM
+      return DateFormat.jm().format(dt); 
     } catch (_) {
       return timeStr;
     }
@@ -79,7 +79,7 @@ class NotificationsPage extends StatelessWidget {
             final data = Map<String, dynamic>.from(
                 (snapshot.data! as DatabaseEvent).snapshot.value as Map);
 
-            // Filter only WARNING/OVERFLOW or rain detected
+            //  WARNING/OVERFLOW or rain detected
             final filtered = data.entries.where((entry) {
               final item = Map<String, dynamic>.from(entry.value);
               final status = (item["water_status"] ?? "").toString().toUpperCase();

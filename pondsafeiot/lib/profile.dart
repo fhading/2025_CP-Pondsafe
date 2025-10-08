@@ -1,77 +1,153 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final user = FirebaseAuth.instance.currentUser;
+
+  Future<void> _editName(BuildContext context) async {
+    final nameController = TextEditingController(text: user?.displayName ?? "");
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("Edit Name"),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: "Enter your name",
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () async {
+              await user?.updateDisplayName(nameController.text.trim());
+              await user?.reload();
+              setState(() {});
+              Navigator.pop(context, true);
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Name updated successfully")),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    final updatedUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFF),
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Colors.blue.shade800,
-        title: const Text(
-          "Profile",
-          style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-              color: Colors.white),
-        ),
-        elevation: 4,
-      ),
-      body: Center(
-        child: Card(
-          elevation: 8,
-          margin: const EdgeInsets.all(24),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          child: Padding(
-            padding: const EdgeInsets.all(32),
+      body: Column(
+        children: [
+          
+          Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blue.shade900, Colors.blue.shade600],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(40),
+              ),
+            ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.blue,
-                  child: Icon(Icons.person, size: 60, color: Colors.white),
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.person, size: 60, color: Colors.blue),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
                 Text(
-                  user?.email ?? "No Email",
+                  updatedUser?.displayName ??
+                      updatedUser?.email ??
+                      "No User Info",
                   style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87),
-                  textAlign: TextAlign.center,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-                const SizedBox(height: 30),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
-                      elevation: 6,
-                    ),
-                    onPressed: () async {
-                      await FirebaseAuth.instance.signOut();
-                    },
-                    child: const Text(
-                      "Logout",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
+                Text(
+                  updatedUser?.email ?? "",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white70,
                   ),
                 ),
               ],
             ),
           ),
-        ),
+
+          const SizedBox(height: 30),
+
+          // Profile actions card
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Card(
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.edit, color: Colors.blue),
+                        title: const Text("Edit Name"),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        onTap: () => _editName(context),
+                      ),
+                      const Divider(),
+                      ListTile(
+                        leading: const Icon(Icons.logout, color: Colors.red),
+                        title: const Text(
+                          "Logout",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        onTap: () async {
+                          await FirebaseAuth.instance.signOut();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
