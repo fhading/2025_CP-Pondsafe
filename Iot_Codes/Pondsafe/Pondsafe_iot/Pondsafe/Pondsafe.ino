@@ -7,19 +7,20 @@
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 #include "time.h"
+
 #include "WaterLevel.h"
 #include "RainSensor.h"
 #include "BuzzerControl.h"
 #include "CaptivePortal.h"
 
-// Firebase priv credentials
-#define API_KEY "AIzaSyBSXW22Lh3DkBjIw3hvP01-EESHseclMVg"
-#define DATABASE_URL "https://pondsafeiot-7026c-default-rtdb.asia-southeast1.firebasedatabase.app"
+// ✅ new Firebase credentials
+#define API_KEY "AIzaSyCSX68XYYHQqoswFcGoRVG_06Ijb-V_6xI"
+#define DATABASE_URL "https://pondsafeiot-c370a-default-rtdb.asia-southeast1.firebasedatabase.app"
+
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
-// NTP
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 28800;
 const int daylightOffset_sec = 0;
@@ -30,7 +31,7 @@ WebServer server(80);
 Preferences preferences;
 String ssid, pass;
 
-// LED
+// LED Indicator
 #define LED_PIN 18
 
 unsigned long lastRead = 0;
@@ -49,7 +50,6 @@ void setup() {
 
     preferences.begin("wifi", false);
 
-    
     if (!connectWiFi(preferences, ssid, pass)) {
         Serial.println("No saved WiFi, starting Captive Portal...");
         startCaptivePortal(dnsServer, server, preferences);
@@ -63,14 +63,20 @@ void setup() {
     Serial.print("WiFi connected! IP: ");
     Serial.println(WiFi.localIP());
 
+    // Wait for NTP time
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    struct tm timeinfo;
+    while (!getLocalTime(&timeinfo)) {
+        Serial.println("Waiting for NTP time...");
+        delay(500);
+    }
 
-    // Firebase
+    // ✅ Firebase setup
     auth.user.email = "icebearfhadia@gmail.com";
-    auth.user.password = "zampond#01iotpondsafe0154";
+    auth.user.password = "pondsafezam2025iot";
     config.api_key = API_KEY;
     config.database_url = DATABASE_URL;
-
+    config.timeout.serverResponse = 10000; 
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
     Serial.println("Firebase initialized ✅");
@@ -87,13 +93,10 @@ void loop() {
             String waterStatus = getWaterStatus(distance);
             float waterPercent = getWaterLevelPercent(distance);
             bool rainDetected = checkRainDetected();
-            int rainValue = readRainValue();
-            String rainIntensity = getRainIntensity();
+            String rainIntensity = readRainIntensity();
 
-            
-            Serial.printf("[RAIN ] Detected: %s | Raw AO: %d | Intensity: %s\n",
-                          rainDetected ? "Yes" : "No", rainValue, rainIntensity.c_str());
-
+            Serial.printf("[RAIN ] Detected: %s | Intensity: %s\n",
+                          rainDetected ? "Yes" : "No", rainIntensity.c_str());
             Serial.printf("[WATER] Distance: %.2f in | Level: %.2f%% -> Status: %s\n",
                           distance, waterPercent, waterStatus.c_str());
 
@@ -105,8 +108,13 @@ void loop() {
 
             updateBuzzer();
 
-            // data to Firebase
-            if (Firebase.ready()) {
+            // Firebase write every 10 seconds
+            static unsigned long lastFirebaseUpload = 0;
+            const unsigned long firebaseInterval = 10000;
+
+            if (Firebase.ready() && (now - lastFirebaseUpload >= firebaseInterval)) {
+                lastFirebaseUpload = now;
+
                 struct tm timeinfo;
                 if (getLocalTime(&timeinfo)) {
                     char dateString[20], timeString[20];
@@ -115,23 +123,26 @@ void loop() {
 
                     String logPath = "/sensors/history/" + String(dateString) + "_" + String(timeString);
 
-                    Firebase.RTDB.setFloat(&fbdo, logPath + "/distance_inches", distance);
-                    Firebase.RTDB.setFloat(&fbdo, logPath + "/water_percent", waterPercent);
-                    Firebase.RTDB.setString(&fbdo, logPath + "/water_status", waterStatus);
-                    Firebase.RTDB.setString(&fbdo, logPath + "/rain_detected", rainDetected ? "Yes" : "No");
-                    Firebase.RTDB.setInt(&fbdo, logPath + "/rain_intensity", rainValue);
-                    Firebase.RTDB.setString(&fbdo, logPath + "/date", dateString);
-                    Firebase.RTDB.setString(&fbdo, logPath + "/time", timeString);
+                    bool ok = true;
+                    ok &= Firebase.RTDB.setFloat(&fbdo, logPath + "/distance_inches", distance);
+                    ok &= Firebase.RTDB.setFloat(&fbdo, logPath + "/water_percent", waterPercent);
+                    ok &= Firebase.RTDB.setString(&fbdo, logPath + "/water_status", waterStatus);
+                    ok &= Firebase.RTDB.setString(&fbdo, logPath + "/rain_detected", rainDetected ? "Yes" : "No");
+                    ok &= Firebase.RTDB.setString(&fbdo, logPath + "/rain_intensity", rainIntensity);
+                    ok &= Firebase.RTDB.setString(&fbdo, logPath + "/date", dateString);
+                    ok &= Firebase.RTDB.setString(&fbdo, logPath + "/time", timeString);
 
-                    if (fbdo.httpCode() > 0) Serial.println("[Firebase] ✅ Data saved!");
+                    if (ok) Serial.println("[Firebase] ✅ Data saved!");
                     else Serial.printf("[Firebase] ❌ Error: %s\n", fbdo.errorReason().c_str());
                 }
+            } else if (!Firebase.ready()) {
+                Serial.println("[Firebase] ⚠️ Not ready, skipping upload...");
             }
-        }
-    }
+        } 
+    } 
 
     if (WiFi.getMode() == WIFI_AP) {
         dnsServer.processNextRequest();
         server.handleClient();
     }
-}
+} 

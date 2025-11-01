@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:pondsafeiot/weather.dart';
 import 'firebase_options.dart';
 import 'login_page.dart';
 import 'main_navigation.dart';
 import 'water_history.dart';
-import 'rain_history.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +31,7 @@ class PondSafeApp extends StatelessWidget {
       
       routes: {
         '/water-history': (context) => const WaterHistoryPage(),
-        '/rain-history': (context) => const RainHistoryPage(),
+        '/weather': (context) => const WeatherPage(),
       },
 
       home: StreamBuilder<User?>(

@@ -12,8 +12,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final DatabaseReference ref =
-      FirebaseDatabase.instance.ref().child("sensors/history");
+  final DatabaseReference ref = FirebaseDatabase.instance.ref().child("sensors/history");
 
   Map<String, dynamic>? currentData;
   int? lastDisplayedHour;
@@ -26,7 +25,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _fetchLatestData(); 
+    _fetchLatestData();
     _startHourlyTimer();
     _startShortTimer();
     _startFlashTimer();
@@ -40,30 +39,29 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  // hourly timer
   void _startHourlyTimer() {
-    hourlyTimer = Timer.periodic(const Duration(hours: 1), (timer) {
+    hourlyTimer = Timer.periodic(const Duration(hours: 1), (_) {
       _fetchLatestData(updateImmediately: false);
     });
   }
 
-  // Short timer 
   void _startShortTimer() {
-    shortTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    shortTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       _fetchLatestData(updateImmediately: true);
     });
   }
 
   void _startFlashTimer() {
-    flashTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (currentData != null) {
-        final status =
-            (currentData!["water_status"] ?? "").toString().toUpperCase();
-        if (status == "WARNING" || status == "OVERFLOW") {
-          if (mounted) setState(() => flashToggle = !flashToggle);
-        } else if (flashToggle) {
-          if (mounted) setState(() => flashToggle = false);
-        }
+    flashTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (currentData == null) return;
+
+      final status = (currentData!["water_status"] ?? "NORMAL").toString().toUpperCase();
+      final rainDetected = (currentData!["rain_detected"] ?? "No").toString().toUpperCase() == "YES";
+
+      if (status == "WARNING" || status == "OVERFLOW" || rainDetected) {
+        if (mounted) setState(() => flashToggle = !flashToggle);
+      } else if (flashToggle) {
+        if (mounted) setState(() => flashToggle = false);
       }
     });
   }
@@ -78,12 +76,12 @@ class _HomePageState extends State<HomePage> {
 
     final timeString = latest["time"] ?? "00:00:00";
     final hour = int.tryParse(timeString.split(":")[0]) ?? 0;
-    final status = (latest["water_status"] ?? "").toString().toUpperCase();
+    final status = (latest["water_status"] ?? "NORMAL").toString().toUpperCase();
+    final rainDetected = (latest["rain_detected"] ?? "No").toString().toUpperCase() == "YES";
 
-   
     if (currentData == null ||
-        (updateImmediately && (status == "WARNING" || status == "OVERFLOW")) ||
-        (hour != lastDisplayedHour && status != "WARNING" && status != "OVERFLOW")) {
+        (updateImmediately && (status == "WARNING" || status == "OVERFLOW" || rainDetected)) ||
+        (hour != lastDisplayedHour && !["WARNING", "OVERFLOW"].contains(status) && !rainDetected)) {
       lastDisplayedHour = hour;
       if (mounted) {
         setState(() {
@@ -125,15 +123,11 @@ class _HomePageState extends State<HomePage> {
     return null;
   }
 
-  Color getWaterStatusColor(String status) {
-    switch (status.toUpperCase()) {
-      case "OVERFLOW":
-        return flashToggle ? Colors.red.shade300 : Colors.red.shade700;
-      case "WARNING":
-        return flashToggle ? Colors.yellow.shade300 : Colors.yellow.shade700;
-      default:
-        return Colors.blue.shade700;
-    }
+  Color getCardColor(String status, bool rainDetected) {
+    if (status == "OVERFLOW") return flashToggle ? Colors.red.shade300 : Colors.red.shade700;
+    if (status == "WARNING") return flashToggle ? Colors.yellow.shade300 : Colors.yellow.shade700;
+    if (rainDetected) return flashToggle ? Colors.orange.shade300 : Colors.orange.shade700;
+    return Colors.blue.shade700;
   }
 
   Future<void> _manualRefresh() async {
@@ -142,38 +136,34 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
-    );
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
   }
 
   @override
   Widget build(BuildContext context) {
     if (currentData == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final waterStatus = currentData!["water_status"] ?? "-";
-    final cardColor = getWaterStatusColor(waterStatus);
+    final waterStatus = (currentData!["water_status"] ?? "NORMAL").toString().toUpperCase();
+
+    
+    final rawPercent = currentData!["water_percent"];
+    final waterLevel = rawPercent is num ? rawPercent.toStringAsFixed(2) : "-";
+
+    final rainDetectedStr = (currentData!["rain_detected"] ?? "No").toString();
+    final rainDetected = rainDetectedStr.toUpperCase() == "YES";
+
+    final cardColor = getCardColor(waterStatus, rainDetected);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFF),
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: Colors.blue.shade800,
-        title: const Text(
-          "PondSafe Monitoring",
-          style: TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
-        ),
+        title: const Text("PondSafe Monitoring", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () => _logout(context),
-          ),
+          IconButton(icon: const Icon(Icons.logout, color: Colors.white), onPressed: () => _logout(context)),
         ],
       ),
       body: SafeArea(
@@ -192,37 +182,40 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   gradient: LinearGradient(
-                    colors: [cardColor, cardColor.withOpacity(0.8)],
+                    colors: [cardColor, cardColor.withOpacity(0.85)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: cardColor.withOpacity(0.5),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
-                    )
-                  ],
+                  boxShadow: [BoxShadow(color: cardColor.withOpacity(0.5), blurRadius: 15, offset: const Offset(0, 8))],
                 ),
                 padding: const EdgeInsets.all(24),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.water_drop, size: 55, color: Colors.white),
-                    const SizedBox(width: 20),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        const Text("Water Status",
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white70)),
-                        Text(
-                          waterStatus,
-                          style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
+                        const Icon(Icons.water_drop, size: 50, color: Colors.white),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("Water Level", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white70)),
+                            Text("$waterStatus ($waterLevel%)", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const Icon(Icons.cloud, size: 40, color: Colors.white),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("Rain Detected", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white70)),
+                            Text(rainDetectedStr, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ],
                         ),
                       ],
                     ),
@@ -234,18 +227,12 @@ class _HomePageState extends State<HomePage> {
                 spacing: 14,
                 runSpacing: 14,
                 children: [
-                  _buildInfoCard(Icons.percent, "Water Percent",
-                      "${currentData!["water_percent"] ?? "-"}%", Colors.teal.shade400),
-                  _buildInfoCard(Icons.straighten, "Distance",
-                      "${currentData!["distance_inches"] ?? "-"} in", Colors.indigo.shade400),
-                  _buildInfoCard(Icons.cloud, "Rain Detected",
-                      "${currentData!["rain_detected"] ?? "-"}", Colors.deepPurple.shade400),
-                  _buildInfoCard(Icons.bolt, "Rain Intensity",
-                      "${currentData!["rain_intensity"] ?? "-"}", Colors.orange.shade400),
-                  _buildInfoCard(Icons.calendar_today, "Date",
-                      "${currentData!["date"] ?? "-"}", Colors.green.shade400),
-                  _buildInfoCard(Icons.access_time, "Time",
-                      "${currentData!["time"] ?? "-"}", Colors.red.shade400),
+                  _buildInfoCard(Icons.percent, "Pond Percent", "$waterLevel%", Colors.teal.shade400),
+                  _buildInfoCard(Icons.straighten, "Water Level", "${currentData!["distance_inches"] ?? "-"} in", Colors.indigo.shade400),
+                  _buildInfoCard(Icons.cloud, "Rain Detected", rainDetectedStr, Colors.deepPurple.shade400),
+                  _buildInfoCard(Icons.bolt, "Rain Intensity", "${currentData!["rain_intensity"] ?? "No Rain"}", Colors.orange.shade400),
+                  _buildInfoCard(Icons.calendar_today, "Date", "${currentData!["date"] ?? "-"}", Colors.green.shade400),
+                  _buildInfoCard(Icons.access_time, "Time", "${currentData!["time"] ?? "-"}", Colors.red.shade400),
                 ],
               ),
             ],
@@ -255,8 +242,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildInfoCard(
-      IconData icon, String title, String value, Color color) {
+  Widget _buildInfoCard(IconData icon, String title, String value, Color color) {
     return SizedBox(
       width: 160,
       child: Card(
@@ -268,23 +254,11 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircleAvatar(
-                  backgroundColor: color,
-                  radius: 28,
-                  child: Icon(icon, color: Colors.white, size: 30)),
+              CircleAvatar(backgroundColor: color, radius: 28, child: Icon(icon, color: Colors.white, size: 30)),
               const SizedBox(height: 16),
-              Text(title,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87)),
+              Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87)),
               const SizedBox(height: 10),
-              Text(value,
-                  style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black)),
+              Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
             ],
           ),
         ),

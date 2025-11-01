@@ -1,14 +1,14 @@
 {
   "project_info": {
-    "project_number": "707318829474",
-    "firebase_url": "https://pondsafeiot-7026c-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "project_id": "pondsafeiot-7026c",
-    "storage_bucket": "pondsafeiot-7026c.firebasestorage.app"
+    "project_number": "901478285419",
+    "firebase_url": "https://pondsafeiot-c370a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "pondsafeiot-c370a",
+    "storage_bucket": "pondsafeiot-c370a.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:707318829474:android:5ed361a9d261dd9cc622fb",
+        "mobilesdk_app_id": "1:901478285419:android:3deead3628d0af3346312e",
         "android_client_info": {
           "package_name": "com.example.pondsafeiot"
         }
@@ -16,26 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCwiySQNJqwC6ko9BhY4Qd-h-GnTc7U9Xw"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:707318829474:android:f410f3d7f16d1d1ec622fb",
-        "android_client_info": {
-          "package_name": "com.pondsafe.iot"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCwiySQNJqwC6ko9BhY4Qd-h-GnTc7U9Xw"
+          "current_key": "AIzaSyAdIjjCFz1_37oicJ23YGitW96RkIK7nl4"
         }
       ],
       "services": {

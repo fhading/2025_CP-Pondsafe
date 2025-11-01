@@ -3,7 +3,7 @@ import 'home_page.dart';
 import 'notifications.dart';
 import 'profile.dart';
 import 'water_history.dart';
-import 'rain_history.dart';
+import 'weather.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -18,7 +18,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _pages = const [
     HomePage(),
     WaterHistoryPage(),
-    RainHistoryPage(),
+    WeatherPage(),
     NotificationsPage(),
     ProfilePage(),
   ];
@@ -69,7 +69,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.cloud_queue),
-                  label: "Rain",
+                  label: "Weather",
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.notifications_active_outlined),

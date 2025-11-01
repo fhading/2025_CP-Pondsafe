@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/material.dart'; // UI
+import 'package:firebase_database/firebase_database.dart'; // Firebase history data
+import 'package:fl_chart/fl_chart.dart'; // Graphs
+import 'package:intl/intl.dart'; // Date formatting
 
 class WaterHistoryPage extends StatefulWidget {
   const WaterHistoryPage({super.key});
@@ -12,11 +12,12 @@ class WaterHistoryPage extends StatefulWidget {
 
 class _WaterHistoryPageState extends State<WaterHistoryPage> {
   final DatabaseReference ref = FirebaseDatabase.instance.ref("sensors/history");
-  final double maxDepthIn = 65.0; // 0 = overflow, 65 = empty
+  final double maxDepthIn = 65.0;
 
-  String filter = "day"; // "hourly", "day", "week", "month"
+  String filter = "day";
   DateTime selectedDate = DateTime.now();
 
+  // Parse timestamp key into DateTime
   DateTime parseDateKey(String key) {
     try {
       return DateFormat("dd-MM-yyyy_HH:mm:ss").parse(key);
@@ -25,10 +26,7 @@ class _WaterHistoryPageState extends State<WaterHistoryPage> {
     }
   }
 
-  double percentToInches(double percent) {
-    return maxDepthIn - (percent / 100 * maxDepthIn);
-  }
-
+  // Check if date fits filter selection
   bool matchFilter(DateTime dt) {
     if (filter == "hourly") {
       return dt.year == selectedDate.year &&
@@ -40,80 +38,66 @@ class _WaterHistoryPageState extends State<WaterHistoryPage> {
           dt.month == selectedDate.month &&
           dt.day == selectedDate.day;
     } else if (filter == "week") {
-      final startOfWeek =
-          selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
-      final endOfWeek = startOfWeek.add(const Duration(days: 6));
-      return !dt.isBefore(startOfWeek) && !dt.isAfter(endOfWeek);
+      final start = selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
+      final end = start.add(const Duration(days: 6));
+      return !dt.isBefore(start) && !dt.isAfter(end);
     } else if (filter == "month") {
       return dt.year == selectedDate.year && dt.month == selectedDate.month;
     }
     return false;
   }
 
-  List<Map<String, dynamic>> groupAndAverage(
-      List<Map<String, dynamic>> history) {
-    final Map<String, Map<String, dynamic>> temp = {};
-    DateTime startOfWeek =
-        selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
-
-    for (var e in history) {
-      final DateTime dt = e['dateTime'] as DateTime;
-      final double inches = (e['inches'] as double);
-      String label;
-      int sortKey;
-
-      if (filter == "hourly") {
-        label = DateFormat('mm').format(dt);
-        sortKey = dt.minute;
-      } else if (filter == "day") {
-        label = DateFormat('ha').format(dt).replaceAll(' ', '');
-        sortKey = dt.hour;
-      } else if (filter == "week") {
-        label = DateFormat('EEE').format(dt);
-        sortKey = dt.difference(startOfWeek).inDays;
-      } else {
-        label = DateFormat('MMM d').format(dt);
-        sortKey = dt.day;
-      }
-
-      if (!temp.containsKey(label)) {
-        temp[label] = {'sum': 0.0, 'count': 0, 'sort': sortKey};
-      }
-
-      temp[label]!['sum'] = (temp[label]!['sum'] as double) + inches;
-      temp[label]!['count'] = (temp[label]!['count'] as int) + 1;
-    }
-
-    final List<Map<String, dynamic>> buckets = [];
-    temp.forEach((label, data) {
-      final sum = data['sum'] as double;
-      final count = data['count'] as int;
-      final avg = (count > 0) ? sum / count : 0.0;
-      final percent = ((maxDepthIn - avg) / maxDepthIn) * 100.0;
-      buckets.add({
-        'label': label,
-        'inches': avg,
-        'percent': percent,
-        'sort': data['sort'] as int,
-      });
-    });
-
-    buckets.sort((a, b) => (a['sort'] as int).compareTo(b['sort'] as int));
-    return buckets;
-  }
-
+  //  filter date
   String getDisplayedDate() {
     if (filter == "day") {
       return DateFormat("MMM d, yyyy").format(selectedDate);
     } else if (filter == "week") {
-      final startOfWeek =
-          selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
-      final endOfWeek = startOfWeek.add(const Duration(days: 6));
-      return "${DateFormat("MMM d").format(startOfWeek)} - ${DateFormat("MMM d").format(endOfWeek)}";
+      final start = selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
+      final end = start.add(const Duration(days: 6));
+      return "${DateFormat("MMM d").format(start)} - ${DateFormat("MMM d").format(end)}";
     } else if (filter == "month") {
       return DateFormat("MMMM yyyy").format(selectedDate);
     } else {
       return DateFormat("MMM d, yyyy HH:00").format(selectedDate);
+    }
+  }
+
+  //  water depth in inches
+  double percentToInches(double percent) {
+    return maxDepthIn - (percent / 100 * maxDepthIn);
+  }
+
+
+  int _mapRainIntensity(String? value) {
+    if (value == null) return 0;
+    switch (value.toUpperCase()) {
+      case "NONE":
+        return 0;
+      case "LIGHT":
+        return 1;
+      case "MEDIUM":
+        return 2;
+      case "HEAVY":
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  // Convert number to label
+  String _intensityLabel(double value) {
+    int v = value.round();
+    switch (v) {
+      case 0:
+        return "None";
+      case 1:
+        return "Light";
+      case 2:
+        return "Medium";
+      case 3:
+        return "Heavy";
+      default:
+        return "";
     }
   }
 
@@ -125,23 +109,20 @@ class _WaterHistoryPageState extends State<WaterHistoryPage> {
         centerTitle: true,
         backgroundColor: Colors.blue.shade800,
         title: const Text(
-          "Water History",
-          style: TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
+          "Rain & Water History",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
         ),
       ),
       body: Column(
         children: [
-          // filter controls in card
+         
           Padding(
             padding: const EdgeInsets.all(12),
             child: Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 6,
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -158,17 +139,13 @@ class _WaterHistoryPageState extends State<WaterHistoryPage> {
                         if (v != null) setState(() => filter = v);
                       },
                     ),
-
-                    // 👇 Date Display
                     Expanded(
                       child: Text(
                         getDisplayedDate(),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                       ),
                     ),
-
                     IconButton(
                       icon: const Icon(Icons.date_range, color: Colors.blue),
                       onPressed: () async {
@@ -181,186 +158,143 @@ class _WaterHistoryPageState extends State<WaterHistoryPage> {
                         if (picked != null) setState(() => selectedDate = picked);
                       },
                     ),
-                    if (filter == 'hourly')
-                      IconButton(
-                        icon: const Icon(Icons.access_time,
-                            color: Colors.deepOrange),
-                        onPressed: () async {
-                          final TimeOfDay? t = await showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay.fromDateTime(selectedDate),
-                          );
-                          if (t != null) {
-                            setState(() {
-                              selectedDate = DateTime(
-                                selectedDate.year,
-                                selectedDate.month,
-                                selectedDate.day,
-                                t.hour,
-                              );
-                            });
-                          }
-                        },
-                      ),
                   ],
                 ),
               ),
             ),
           ),
 
-          // data + chart
+          //  historical data 
           Expanded(
             child: StreamBuilder(
               stream: ref.onValue,
               builder: (context, snapshot) {
-                if (!snapshot.hasData ||
-                    (snapshot.data! as DatabaseEvent).snapshot.value == null) {
+                if (!snapshot.hasData || (snapshot.data!).snapshot.value == null) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final raw = (snapshot.data! as DatabaseEvent).snapshot.value as Map;
-                final List<Map<String, dynamic>> history = [];
+                final raw = (snapshot.data!).snapshot.value as Map;
 
+                // Water list
+                final List<Map<String, dynamic>> waterHistory = [];
                 raw.forEach((key, value) {
-                  final Map<String, dynamic> entry =
-                      Map<String, dynamic>.from(value);
-                  final DateTime dt = parseDateKey(key);
+                  final entry = Map<String, dynamic>.from(value);
+                  final dt = parseDateKey(key);
                   if (!matchFilter(dt)) return;
 
-                  final double percent =
-                      double.tryParse(entry['water_percent'].toString()) ?? 0.0;
-                  final double inches = percentToInches(percent);
-                  history.add(
-                      {'dateTime': dt, 'percent': percent, 'inches': inches});
+                  final percent = double.tryParse(entry['water_percent'].toString()) ?? 0.0;
+                  final inches = percentToInches(percent);
+                  waterHistory.add({'dateTime': dt, 'percent': percent, 'inches': inches});
                 });
 
-                if (history.isEmpty) {
+                // Rain list
+                final List<Map<String, dynamic>> rainHistory = [];
+                raw.forEach((key, value) {
+                  final entry = Map<String, dynamic>.from(value);
+                  final dt = parseDateKey(key);
+                  if (!matchFilter(dt)) return;
+
+                  final intensity = _mapRainIntensity(entry['rain_intensity']?.toString());
+                  rainHistory.add({'dateTime': dt, 'intensity': intensity});
+                });
+
+                if (waterHistory.isEmpty && rainHistory.isEmpty) {
                   return const Center(child: Text("No data available"));
                 }
 
-                final buckets = groupAndAverage(history);
-                if (buckets.isEmpty) {
-                  return const Center(child: Text("No grouped data"));
+                //  chart
+                List<Map<String, dynamic>> group(List<Map<String, dynamic>> history, String key) {
+                  final Map<String, Map<String, dynamic>> temp = {};
+                  DateTime startOfWeek =
+                      selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
+
+                  for (var e in history) {
+                    final DateTime dt = e['dateTime'];
+                    final double val = (e[key] as num).toDouble();
+                    String label;
+                    int sortKey;
+
+                    if (filter == "hourly") {
+                      label = DateFormat('h:mm a').format(dt);
+                      sortKey = dt.hour * 60 + dt.minute;
+                    } else if (filter == "day") {
+                      label = DateFormat('h a').format(dt);
+                      sortKey = dt.hour;
+                    } else if (filter == "week") {
+                      label = DateFormat('EEE').format(dt);
+                      sortKey = dt.difference(startOfWeek).inDays;
+                    } else {
+                      label = DateFormat('MMM d').format(dt);
+                      sortKey = dt.day;
+                    }
+
+                    temp.putIfAbsent(label, () => {'sum': 0.0, 'count': 0, 'sort': sortKey});
+                    temp[label]!['sum'] = (temp[label]!['sum'] as double) + val;
+                    temp[label]!['count'] = (temp[label]!['count'] as int) + 1;
+                  }
+
+                  return temp.entries
+                      .map((e) => {
+                            'label': e.key,
+                            'avg': (e.value['count'] as int) > 0
+                                ? (e.value['sum'] as double) /
+                                    (e.value['count'] as int)
+                                : 0.0,
+                            'sort': e.value['sort'],
+                          })
+                      .toList()
+                    ..sort((a, b) => (a['sort'] as int).compareTo(b['sort'] as int));
                 }
 
-                final spots = <FlSpot>[];
-                for (int i = 0; i < buckets.length; i++) {
-                  final double inches = buckets[i]['inches'] as double;
-                  final double plottedY = maxDepthIn - inches;
-                  spots.add(FlSpot(i.toDouble(), plottedY));
-                }
+                final waterBuckets = group(waterHistory, 'inches');
+                final rainBuckets = group(rainHistory, 'intensity');
 
-                final labels =
-                    buckets.map((b) => b['label'] as String).toList();
+                // Chart points
+                final waterSpots = [
+                  for (int i = 0; i < waterBuckets.length; i++)
+                    FlSpot(i.toDouble(), maxDepthIn - waterBuckets[i]['avg'])
+                ];
+                final rainSpots = [
+                  for (int i = 0; i < rainBuckets.length; i++)
+                    FlSpot(i.toDouble(), rainBuckets[i]['avg'])
+                ];
 
-                return Column(
-                  children: [
-                    // chart card
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20)),
-                        elevation: 6,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: SizedBox(
-                            height: 240,
-                            child: LineChart(
-                              LineChartData(
-                                minY: 0,
-                                maxY: maxDepthIn,
-                                gridData: FlGridData(show: true),
-                                borderData: FlBorderData(show: true),
-                                titlesData: FlTitlesData(
-                                  bottomTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      getTitlesWidget: (value, meta) {
-                                        final idx = value.toInt();
-                                        if (idx >= 0 && idx < labels.length) {
-                                          return Padding(
-                                            padding:
-                                                const EdgeInsets.only(top: 6),
-                                            child: Text(labels[idx],
-                                                style: const TextStyle(
-                                                    fontSize: 11)),
-                                          );
-                                        }
-                                        return const Text('');
-                                      },
-                                      reservedSize: 28,
-                                      interval: 1,
-                                    ),
-                                  ),
-                                  leftTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      reservedSize: 46,
-                                      interval: 10,
-                                      getTitlesWidget: (value, meta) {
-                                        final double inches =
-                                            (maxDepthIn - value);
-                                        return Text(
-                                          "${inches.toStringAsFixed(0)} in",
-                                          style:
-                                              const TextStyle(fontSize: 11),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  rightTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      reservedSize: 40,
-                                      interval: 10,
-                                      getTitlesWidget: (value, meta) {
-                                        final double percent =
-                                            (value / maxDepthIn) * 100;
-                                        return Text(
-                                          "${percent.toStringAsFixed(0)}%",
-                                          style:
-                                              const TextStyle(fontSize: 11),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  topTitles: AxisTitles(
-                                      sideTitles:
-                                          SideTitles(showTitles: false)),
-                                ),
-                                lineBarsData: [
-                                  LineChartBarData(
-                                    spots: spots,
-                                    isCurved: true,
-                                    color: Colors.blue,
-                                    barWidth: 2.5,
-                                    dotData: FlDotData(show: true),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                final waterLabels = waterBuckets.map((b) => b['label'] as String).toList();
+                final rainLabels = rainBuckets.map((b) => b['label'] as String).toList();
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Rain Chart
+                      const Text("Rain Intensity", style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      _buildChartCard(
+                        spots: rainSpots,
+                        maxY: 3,
+                        labels: rainLabels,
+                        leftTitle: (v) => _intensityLabel(v),
+                        color: Colors.blue,
                       ),
-                    ),
 
-                    // list cards
-                    Expanded(
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        itemCount: buckets.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 6),
-                        itemBuilder: (context, idx) {
-                          final b = buckets[idx];
-                          final String label = b['label'] as String;
-                          final double inches = b['inches'] as double;
-                          final double percent = b['percent'] as double;
+                      // Water Chart
+                      const SizedBox(height: 16),
+                      const Text("Water Level", style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      _buildChartCard(
+                        spots: waterSpots,
+                        maxY: maxDepthIn,
+                        labels: waterLabels,
+                        leftTitle: (v) => "${(maxDepthIn - v).toStringAsFixed(0)} in",
+                        color: Colors.teal,
+                      ),
 
-                          return Card(
+                      // Rain List
+                      const SizedBox(height: 16),
+                      const Text("Rain History", style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      ...rainBuckets.map((b) => Card(
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16)),
                             elevation: 4,
@@ -368,25 +302,100 @@ class _WaterHistoryPageState extends State<WaterHistoryPage> {
                             child: ListTile(
                               leading: CircleAvatar(
                                 backgroundColor: Colors.blue.shade700,
-                                child: const Icon(Icons.water_drop,
-                                    color: Colors.white),
+                                child: const Icon(Icons.cloud, color: Colors.white),
                               ),
-                              title: Text(label,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w600)),
-                              subtitle: Text(
-                                  "${inches.toStringAsFixed(1)} in | ${percent.toStringAsFixed(1)}%"),
+                              title: Text(b['label']),
+                              subtitle: Text("Average: ${_intensityLabel(b['avg'])}"),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                          )),
+
+                      // Water List
+                      const SizedBox(height: 16),
+                      const Text("Water Level History", style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      ...waterBuckets.map((b) => Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            elevation: 4,
+                            shadowColor: Colors.teal.withOpacity(0.2),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.teal,
+                                child: const Icon(Icons.water_drop, color: Colors.white),
+                              ),
+                              title: Text(b['label']),
+                              subtitle: Text("${b['avg'].toStringAsFixed(1)} in"),
+                            ),
+                          )),
+                    ],
+                  ),
                 );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Graph card widget
+  Widget _buildChartCard({
+    required List<FlSpot> spots,
+    required double maxY,
+    required List<String> labels,
+    required String Function(double) leftTitle,
+    required Color color,
+  }) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 6,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: SizedBox(
+          height: 240,
+          child: LineChart(
+            LineChartData(
+              minY: 0,
+              maxY: maxY,
+              gridData: FlGridData(show: true),
+              borderData: FlBorderData(show: true),
+              titlesData: FlTitlesData(
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: 1,
+                    getTitlesWidget: (v, _) {
+                      final idx = v.toInt();
+                      if (idx >= 0 && idx < labels.length) {
+                        return Text(labels[idx], style: const TextStyle(fontSize: 11));
+                      }
+                      return const Text('');
+                    },
+                  ),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: maxY / 3,
+                    reservedSize: 46,
+                    getTitlesWidget: (v, _) => Text(leftTitle(v), style: const TextStyle(fontSize: 11)),
+                  ),
+                ),
+                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              ),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  color: color,
+                  barWidth: 2.5,
+                  dotData: FlDotData(show: true),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

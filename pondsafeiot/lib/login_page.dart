@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'main_navigation.dart'; 
+import 'main_navigation.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,7 +23,9 @@ class _LoginPageState extends State<LoginPage> {
       );
       if (!mounted) return;
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const MainNavigation()));
+        context,
+        MaterialPageRoute(builder: (_) => const MainNavigation()),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Login failed: $e")),
@@ -50,7 +52,8 @@ class _LoginPageState extends State<LoginPage> {
             child: Card(
               elevation: 8,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25)),
+                borderRadius: BorderRadius.circular(25),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(28),
                 child: Column(
@@ -100,27 +103,30 @@ class _LoginPageState extends State<LoginPage> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           elevation: 8,
-                          shadowColor: Colors.blue.shade200,
+                          shadowColor: Colors.blue,
                         ),
                         child: Ink(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Colors.blue.shade700, Colors.blue.shade500],
+                              colors: [
+                                Colors.blueAccent,
+                                Colors.lightBlueAccent,
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Container(
-                            alignment: Alignment.center,
+                          child: Center(
                             child: _isLoading
                                 ? const CircularProgressIndicator(color: Colors.white)
                                 : const Text(
                                     "Login",
                                     style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
                           ),
                         ),

@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({super.key});
 
-  // Determine card color based on status
+ 
   Color getStatusColor(String status) {
     switch (status.toUpperCase()) {
       case "OVERFLOW":
@@ -75,11 +75,11 @@ class NotificationsPage extends StatelessWidget {
         stream: ref.onValue,
         builder: (context, snapshot) {
           if (snapshot.hasData &&
-              (snapshot.data! as DatabaseEvent).snapshot.value != null) {
+              (snapshot.data!).snapshot.value != null) {
             final data = Map<String, dynamic>.from(
-                (snapshot.data! as DatabaseEvent).snapshot.value as Map);
+                (snapshot.data!).snapshot.value as Map);
 
-            //  WARNING/OVERFLOW or rain detected
+            //  WARNING
             final filtered = data.entries.where((entry) {
               final item = Map<String, dynamic>.from(entry.value);
               final status = (item["water_status"] ?? "").toString().toUpperCase();
@@ -87,7 +87,7 @@ class NotificationsPage extends StatelessWidget {
               return status == "WARNING" || status == "OVERFLOW" || rain == "YES";
             }).toList();
 
-            // Sort latest to oldest
+            // Sort 
             filtered.sort((a, b) {
               final dtA = parseKeyToDateTime(a.key) ?? DateTime(0);
               final dtB = parseKeyToDateTime(b.key) ?? DateTime(0);

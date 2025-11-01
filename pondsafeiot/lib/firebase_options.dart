@@ -41,53 +41,54 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBSXW22Lh3DkBjIw3hvP01-EESHseclMVg',
-    appId: '1:707318829474:web:85ccf4ebdf2d502fc622fb',
-    messagingSenderId: '707318829474',
-    projectId: 'pondsafeiot-7026c',
-    authDomain: 'pondsafeiot-7026c.firebaseapp.com',
-    databaseURL: 'https://pondsafeiot-7026c-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'pondsafeiot-7026c.firebasestorage.app',
-    measurementId: 'G-JV8K905GG8',
+    apiKey: 'AIzaSyCSX68XYYHQqoswFcGoRVG_06Ijb-V_6xI',
+    appId: '1:901478285419:web:b0ca08510efd41e346312e',
+    messagingSenderId: '901478285419',
+    projectId: 'pondsafeiot-c370a',
+    authDomain: 'pondsafeiot-c370a.firebaseapp.com',
+    databaseURL: 'https://pondsafeiot-c370a-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'pondsafeiot-c370a.firebasestorage.app',
+    measurementId: 'G-TLY938LKPP',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCwiySQNJqwC6ko9BhY4Qd-h-GnTc7U9Xw',
-    appId: '1:707318829474:android:5ed361a9d261dd9cc622fb',
-    messagingSenderId: '707318829474',
-    projectId: 'pondsafeiot-7026c',
-    databaseURL: 'https://pondsafeiot-7026c-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'pondsafeiot-7026c.firebasestorage.app',
+    apiKey: 'AIzaSyAdIjjCFz1_37oicJ23YGitW96RkIK7nl4',
+    appId: '1:901478285419:android:3deead3628d0af3346312e',
+    messagingSenderId: '901478285419',
+    projectId: 'pondsafeiot-c370a',
+    databaseURL: 'https://pondsafeiot-c370a-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'pondsafeiot-c370a.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDxAv38mBpDzz7uxsdVjtx7oahpM_Tz1Y8',
-    appId: '1:707318829474:ios:8d94d72c0df84fa7c622fb',
-    messagingSenderId: '707318829474',
-    projectId: 'pondsafeiot-7026c',
-    databaseURL: 'https://pondsafeiot-7026c-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'pondsafeiot-7026c.firebasestorage.app',
+    apiKey: 'AIzaSyBs3XOSeDlEPIM40G2mNVU5R0K0Vt6jrSA',
+    appId: '1:901478285419:ios:e706bf7ed19ce9ca46312e',
+    messagingSenderId: '901478285419',
+    projectId: 'pondsafeiot-c370a',
+    databaseURL: 'https://pondsafeiot-c370a-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'pondsafeiot-c370a.firebasestorage.app',
     iosBundleId: 'com.example.pondsafeiot',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDxAv38mBpDzz7uxsdVjtx7oahpM_Tz1Y8',
-    appId: '1:707318829474:ios:8d94d72c0df84fa7c622fb',
-    messagingSenderId: '707318829474',
-    projectId: 'pondsafeiot-7026c',
-    databaseURL: 'https://pondsafeiot-7026c-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'pondsafeiot-7026c.firebasestorage.app',
+    apiKey: 'AIzaSyBs3XOSeDlEPIM40G2mNVU5R0K0Vt6jrSA',
+    appId: '1:901478285419:ios:e706bf7ed19ce9ca46312e',
+    messagingSenderId: '901478285419',
+    projectId: 'pondsafeiot-c370a',
+    databaseURL: 'https://pondsafeiot-c370a-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'pondsafeiot-c370a.firebasestorage.app',
     iosBundleId: 'com.example.pondsafeiot',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBSXW22Lh3DkBjIw3hvP01-EESHseclMVg',
-    appId: '1:707318829474:web:f30296a9935d9cc2c622fb',
-    messagingSenderId: '707318829474',
-    projectId: 'pondsafeiot-7026c',
-    authDomain: 'pondsafeiot-7026c.firebaseapp.com',
-    databaseURL: 'https://pondsafeiot-7026c-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'pondsafeiot-7026c.firebasestorage.app',
-    measurementId: 'G-J69PFSRQ1R',
+    apiKey: 'AIzaSyCSX68XYYHQqoswFcGoRVG_06Ijb-V_6xI',
+    appId: '1:901478285419:web:59b96a164075d15246312e',
+    messagingSenderId: '901478285419',
+    projectId: 'pondsafeiot-c370a',
+    authDomain: 'pondsafeiot-c370a.firebaseapp.com',
+    databaseURL: 'https://pondsafeiot-c370a-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'pondsafeiot-c370a.firebasestorage.app',
+    measurementId: 'G-69RGDB1S66',
   );
+
 }

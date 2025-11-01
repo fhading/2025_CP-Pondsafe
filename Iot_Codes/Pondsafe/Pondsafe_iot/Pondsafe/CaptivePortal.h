@@ -5,7 +5,7 @@
 #include <Preferences.h>
 
 // Wi-Fi setup
-void handleRoot(Wpage ebServer &server) {
+void handleRoot(WebServer &server) {
     String html = R"rawliteral(
     <!DOCTYPE html>
     <html lang="en">
