@@ -22,4 +22,6 @@ class WeatherService {
     }
     return null;
   }
+
+  static Future fetchWeather(String s) async {}
 }
