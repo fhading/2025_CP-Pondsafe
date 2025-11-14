@@ -13,7 +13,7 @@ class NotificationsPage extends StatelessWidget {
       case "WARNING":
         return Colors.yellow.shade700;
       default:
-        return const Color(0xFF1565C0);
+        return const Color.fromARGB(255, 244, 124, 4);
     }
   }
 

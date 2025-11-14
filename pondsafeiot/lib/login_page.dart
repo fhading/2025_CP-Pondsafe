@@ -75,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-              // --- Login Card ---
+              // Login 
               Container(
                 width: double.infinity,
                 padding:

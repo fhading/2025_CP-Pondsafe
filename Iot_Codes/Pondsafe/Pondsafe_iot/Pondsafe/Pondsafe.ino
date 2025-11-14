@@ -13,7 +13,7 @@
 #include "BuzzerControl.h"
 #include "CaptivePortal.h"
 
-// ✅ new Firebase credentials
+//  Firebase credentials
 #define API_KEY "AIzaSyCSX68XYYHQqoswFcGoRVG_06Ijb-V_6xI"
 #define DATABASE_URL "https://pondsafeiot-c370a-default-rtdb.asia-southeast1.firebasedatabase.app"
 
@@ -71,7 +71,7 @@ void setup() {
         delay(500);
     }
 
-    // ✅ Firebase setup
+    //  Firebase setup
     auth.user.email = "icebearfhadia@gmail.com";
     auth.user.password = "pondsafezam2025iot";
     config.api_key = API_KEY;
@@ -108,7 +108,7 @@ void loop() {
 
             updateBuzzer();
 
-            // Firebase write every 10 seconds
+            // Firebase  10 seconds
             static unsigned long lastFirebaseUpload = 0;
             const unsigned long firebaseInterval = 10000;
 

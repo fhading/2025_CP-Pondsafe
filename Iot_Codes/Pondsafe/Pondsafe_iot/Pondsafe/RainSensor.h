@@ -15,12 +15,12 @@ void initRainSensor() {
     rainDetectedState = false;
 }
 
-// Optional: read raw sensor value
+//read raw sensor value
 int readRainValue() {
     return analogRead(RAIN_AO_PIN);
 }
 
-// Returns "No Rain", "Light", "Moderate", or "Heavy"
+
 String readRainIntensity() {
     int ao = analogRead(RAIN_AO_PIN); 
     if (ao > 3500) return "No Rain";
@@ -29,7 +29,7 @@ String readRainIntensity() {
     else return "Heavy";
 }
 
-// Returns true if rain detected for longer than RAIN_DELAY_MS
+
 bool checkRainDetected() {
     int ao = analogRead(RAIN_AO_PIN);
     bool currentRain = (ao <= 3500); 
